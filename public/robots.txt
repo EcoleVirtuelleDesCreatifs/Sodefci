@@ -1,0 +1,37 @@
+# robots.txt for SODEFCI
+# https://www.sodefci.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.sodefci.com/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /password/
+
+# Disallow private directories
+Disallow: /storage/
+Disallow: /vendor/
+Disallow: /node_modules/
+
+# Allow CSS, JS and images
+Allow: /assets/css/
+Allow: /assets/js/
+Allow: /assets/images/
+
+# Crawl-delay (optional, pour éviter la surcharge)
+Crawl-delay: 1
+
+# Specific bot directives
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
