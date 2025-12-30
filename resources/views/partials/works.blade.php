@@ -54,6 +54,34 @@
         'quincaillerie/23' => ['cat' => 'construction', 'label' => 'Quincaillerie', 'icon' => 'fa-wrench'],
         'quincaillerie/24' => ['cat' => 'construction', 'label' => 'Quincaillerie', 'icon' => 'fa-wrench'],
     ];
+
+    $displayOrder = ['froid', 'electricite', 'genie-civil', 'construction'];
+    $grouped = [];
+    foreach ($displayOrder as $c) {
+        $grouped[$c] = [];
+    }
+
+    foreach ($categories as $key => $data) {
+        $cat = $data['cat'];
+        if (!array_key_exists($cat, $grouped)) {
+            $grouped[$cat] = [];
+        }
+        $grouped[$cat][] = ['key' => $key, 'data' => $data];
+    }
+
+    $orderedCategories = [];
+    while (true) {
+        $added = false;
+        foreach ($displayOrder as $cat) {
+            if (!empty($grouped[$cat])) {
+                $orderedCategories[] = array_shift($grouped[$cat]);
+                $added = true;
+            }
+        }
+        if (!$added) {
+            break;
+        }
+    }
 @endphp
 
 <style>
@@ -222,6 +250,52 @@
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         gap: 24px;
         animation: fadeInUp 1s ease-out 0.4s both;
+    }
+
+    .modern-pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 48px;
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        height: 44px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1.5px solid #e5e5e5;
+        background: #fff;
+        color: #333;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .page-btn:hover {
+        border-color: #ff7700;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px);
+    }
+
+    .page-btn.active {
+        background: linear-gradient(135deg, #ff7700, #ffaa00);
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(255, 119, 0, 0.25);
+    }
+
+    .page-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
     }
 
     .gallery-card {
@@ -514,9 +588,10 @@
 
         <!-- Grid Bento Ultra Modern -->
         <div class="modern-grid" id="modern-gallery">
-            @foreach ($categories as $i => $data)
+            @foreach ($orderedCategories as $item)
                 @php
-                    $imageName = is_string($i) ? $i : (is_numeric($i) && $i < 100 ? 'nospace' . $i : $i);
+                    $imageName = $item['key'];
+                    $data = $item['data'];
                 @endphp
                 <div class="gallery-card" data-category="{{ $data['cat'] }}" style="--index: {{ $loop->index }}">
                     <div class="card-badge">{{ $data['label'] }}</div>
@@ -537,6 +612,8 @@
                 </div>
             @endforeach
         </div>
+
+        <div class="modern-pagination" id="gallery-pagination" aria-label="Pagination"></div>
     </div>
 </section>
 
@@ -546,6 +623,11 @@
 
         const filterChips = document.querySelectorAll('.filter-chip');
         const galleryCards = document.querySelectorAll('.gallery-card');
+        const paginationEl = document.getElementById('gallery-pagination');
+        const itemsPerPage = 12;
+        let activeFilter = '*';
+        let currentPage = 1;
+        const projectSection = document.getElementById('project');
         const counts = {
             froid: 0,
             electricite: 0,
@@ -585,30 +667,132 @@
         });
 
         // Filtrage
+        function getFilteredCards() {
+            const filter = activeFilter;
+            const matches = [];
+            galleryCards.forEach(card => {
+                const categories = card.getAttribute('data-category').split(' ');
+                const shouldShow = filter === '*' || categories.includes(filter);
+                if (shouldShow) matches.push(card);
+            });
+            return matches;
+        }
+
+        function renderPagination(totalItems) {
+            if (!paginationEl) return;
+
+            const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            if (totalItems <= itemsPerPage) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+
+            const createBtn = (label, page, opts = {}) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'page-btn' + (opts.active ? ' active' : '');
+                btn.textContent = label;
+                if (opts.disabled) btn.disabled = true;
+                btn.addEventListener('click', () => {
+                    if (page === currentPage) return;
+                    currentPage = page;
+                    updateGallery();
+                    if (projectSection) {
+                        projectSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+                return btn;
+            };
+
+            paginationEl.innerHTML = '';
+
+            paginationEl.appendChild(createBtn('Précédent', Math.max(1, currentPage - 1), {
+                disabled: currentPage === 1
+            }));
+
+            const maxButtons = 7;
+            let start = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let end = Math.min(totalPages, start + maxButtons - 1);
+            start = Math.max(1, end - maxButtons + 1);
+
+            if (start > 1) {
+                paginationEl.appendChild(createBtn('1', 1, { active: currentPage === 1 }));
+                if (start > 2) {
+                    const spacer = document.createElement('span');
+                    spacer.textContent = '…';
+                    spacer.style.padding = '0 6px';
+                    paginationEl.appendChild(spacer);
+                }
+            }
+
+            for (let p = start; p <= end; p++) {
+                paginationEl.appendChild(createBtn(String(p), p, { active: p === currentPage }));
+            }
+
+            if (end < totalPages) {
+                if (end < totalPages - 1) {
+                    const spacer = document.createElement('span');
+                    spacer.textContent = '…';
+                    spacer.style.padding = '0 6px';
+                    paginationEl.appendChild(spacer);
+                }
+                paginationEl.appendChild(createBtn(String(totalPages), totalPages, { active: currentPage === totalPages }));
+            }
+
+            paginationEl.appendChild(createBtn('Suivant', Math.min(totalPages, currentPage + 1), {
+                disabled: currentPage === totalPages
+            }));
+        }
+
+        function updateGallery() {
+            const filtered = getFilteredCards();
+            const totalItems = filtered.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageSet = new Set(filtered.slice(startIndex, endIndex));
+
+            let visibleIndex = 0;
+            galleryCards.forEach((card, idx) => {
+                const shouldShow = pageSet.has(card);
+                setTimeout(() => {
+                    if (shouldShow) {
+                        card.classList.remove('hidden');
+                        card.classList.add('visible');
+                        card.style.setProperty('--index', visibleIndex++);
+                    } else {
+                        card.classList.add('hidden');
+                        card.classList.remove('visible');
+                    }
+                }, idx * 8);
+            });
+
+            renderPagination(totalItems);
+        }
+
         filterChips.forEach(chip => {
             chip.addEventListener('click', function() {
-                const filter = this.getAttribute('data-filter');
+                activeFilter = this.getAttribute('data-filter');
+                currentPage = 1;
 
                 filterChips.forEach(c => c.classList.remove('active'));
                 this.classList.add('active');
 
-                let visibleIndex = 0;
+                updateGallery();
 
-                galleryCards.forEach((card, idx) => {
-                    const categories = card.getAttribute('data-category').split(' ');
-                    const shouldShow = filter === '*' || categories.includes(filter);
-
-                    setTimeout(() => {
-                        if (shouldShow) {
-                            card.classList.remove('hidden');
-                            card.classList.add('visible');
-                            card.style.setProperty('--index', visibleIndex++);
-                        } else {
-                            card.classList.add('hidden');
-                            card.classList.remove('visible');
-                        }
-                    }, idx * 15);
-                });
+                if (projectSection) {
+                    projectSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             });
         });
 
@@ -630,5 +814,7 @@
         } else {
             galleryCards.forEach(card => card.classList.add('visible'));
         }
+
+        updateGallery();
     });
 </script>

@@ -14,7 +14,7 @@
         <div class="col-md-12">
             <div class="row">
                 <div id="our-partner-slider" class="owl-carousel">
-                   
+
                     <div class="item"><img src="{{ asset('assets/images/client/partner-2.jpg') }}" alt="Partners"></div>
                     <div class="item"><img src="{{ asset('assets/images/client/partner-3.jpg') }}" alt="Partners"></div>
                     <div class="item"><img src="{{ asset('assets/images/client/partner-4.jpg') }}" alt="Partners"></div>
@@ -23,6 +23,8 @@
                     <div class="item"><img src="{{ asset('assets/images/client/partner-6.jpg') }}" alt="Partners"></div>
                     <div class="item"><img src="{{ asset('assets/images/client/partner-7.jpg') }}" alt="Partners"></div>
                      <div class="item"><img src="{{ asset('assets/images/client/partner9.jpg') }}" alt="Partners"></div>
+                     <div class="item"><img src="{{ asset('assets/images/client/partner-10.jpg') }}" alt="Partners"></div>
+                     <div class="item"><img src="{{ asset('assets/images/client/partner-11.jpeg') }}" alt="Partners"></div>
                 </div>
             </div>
         </div>
