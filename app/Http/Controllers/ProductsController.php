@@ -15,9 +15,24 @@ class ProductsController extends Controller
     public function index()
     {
         // Scanner toutes les images du dossier produits
-        $productsPath = public_path('assets/images/works/quincaillerie');
+        $pathsToTry = [
+            public_path('assets/images/works/quincaillerie'),
+        ];
+
+        if (!empty($_SERVER['DOCUMENT_ROOT'])) {
+            $pathsToTry[] = rtrim($_SERVER['DOCUMENT_ROOT'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'assets/images/works/quincaillerie';
+        }
+
+        $productsPath = null;
+        foreach ($pathsToTry as $path) {
+            if (File::isDirectory($path)) {
+                $productsPath = $path;
+                break;
+            }
+        }
+
         $allFiles = [];
-        if (File::isDirectory($productsPath)) {
+        if ($productsPath !== null) {
             $allFiles = File::files($productsPath);
         }
 
