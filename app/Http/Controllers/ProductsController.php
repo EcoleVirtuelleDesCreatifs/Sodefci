@@ -15,7 +15,10 @@ class ProductsController extends Controller
     public function index(){
         // Scanner toutes les images du dossier produits
         $productsPath = public_path('assets/images/produits');
-        $allFiles = File::files($productsPath);
+        $allFiles = [];
+        if (File::isDirectory($productsPath)) {
+            $allFiles = File::files($productsPath);
+        }
 
         // Filtrer uniquement les images (jpg, jpeg, png)
         $productImages = collect($allFiles)
