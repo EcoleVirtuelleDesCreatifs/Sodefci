@@ -12,9 +12,10 @@ use Illuminate\Support\Facades\File;
 
 class ProductsController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         // Scanner toutes les images du dossier produits
-        $productsPath = public_path('assets/images/produits');
+        $productsPath = public_path('assets/images/works/quincaillerie');
         $allFiles = [];
         if (File::isDirectory($productsPath)) {
             $allFiles = File::files($productsPath);
@@ -22,13 +23,15 @@ class ProductsController extends Controller
 
         // Filtrer uniquement les images (jpg, jpeg, png)
         $productImages = collect($allFiles)
-            ->filter(function($file) {
+            ->filter(function ($file) {
                 return in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png']);
             })
-            ->map(function($file) {
+            ->map(function ($file) {
                 return $file->getFilename();
             })
-            ->sort()
+            ->sort(function ($a, $b) {
+                return strnatcasecmp($a, $b);
+            })
             ->values()
             ->toArray();
 
@@ -40,16 +43,15 @@ class ProductsController extends Controller
     {
 
         $data = Product::create([
-            'nameProduit'  =>$request->nameProduit,
-            'numberProduit'  =>$request->numberProduit,
-            'emailProduit'  =>$request->emailProduit,
-            'quantite'  =>$request->quantite,
-            'produit'  =>$request->produit,
+            'nameProduit'  => $request->nameProduit,
+            'numberProduit'  => $request->numberProduit,
+            'emailProduit'  => $request->emailProduit,
+            'quantite'  => $request->quantite,
+            'produit'  => $request->produit,
 
         ]);
 
         Mail::to('bilebossombra@gmail.com')->send(new TestMail());
         return redirect()->route('pages.product')->with('success', 'Votre demande a été bien prise en compte ! Notre service client vous contactera.');
     }
-
 }

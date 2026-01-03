@@ -440,11 +440,11 @@ select.form-control-modern {
                     @foreach($productImages as $index => $imageName)
                         <div class="product-card" style="--index: {{ $index }}">
                             <div class="product-image-wrapper">
-                                <img src="{{ asset('assets/images/produits/' . $imageName) }}"
+                                <img src="{{ asset('assets/images/works/quincaillerie/' . $imageName) }}"
                                      alt="Produit {{ $index + 1 }}"
                                      loading="lazy">
                                 <div class="product-overlay">
-                                    <a href="{{ asset('assets/images/produits/' . $imageName) }}"
+                                    <a href="{{ asset('assets/images/works/quincaillerie/' . $imageName) }}"
                                        data-lightbox="products"
                                        data-title="Produit {{ $index + 1 }}"
                                        style="text-decoration: none;">
